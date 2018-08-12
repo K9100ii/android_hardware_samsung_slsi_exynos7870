@@ -471,6 +471,23 @@ int gralloc_lock_ycbcr(gralloc_module_t const* module __unused,
                     cStride * hnd->height/2);
         cStep = 1;
         break;
+    case HAL_PIXEL_FORMAT_EXYNOS_YV12_M:
+        yStride = hnd->stride;
+        cStride = ALIGN(yStride / 2, 16);
+        cStep = 0;
+        ycbcr->y = (void *)hnd->base;
+        ycbcr->cr = (void *)hnd->base1;
+        ycbcr->cb = (void *)hnd->base2;
+        break;
+    case HAL_PIXEL_FORMAT_EXYNOS_YCrCb_420_SP_M:
+    case HAL_PIXEL_FORMAT_EXYNOS_YCrCb_420_SP_M_FULL:
+        yStride = hnd->stride;
+        cStride = yStride;
+        cStep = 2;
+        ycbcr->y = (void *)hnd->base;
+        ycbcr->cr = (void *)hnd->base1;
+        ycbcr->cb = (void *)(((unsigned long)hnd->base1) + 1);
+        break;
     default:
         ALOGE("gralloc_lock_ycbcr unexpected internal format %x",
                 hnd->format);

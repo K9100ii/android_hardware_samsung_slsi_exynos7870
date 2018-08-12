@@ -87,25 +87,33 @@ struct private_handle_t {
     // ints
     int     magic;
     int     flags;
-    int     size;
-    int     offset;
+    int     size; // 20
+    int     size1; // 24
+    int     size2; // 28
 
-    int     format;
-    int     width;
-    int     height;
-    int     stride;
-    int     vstride;
-    int     frameworkFormat;
+    int     offset; // 2c
+    int     format; // 30
+    int     format1; // 34
+    int     format2; // 38
 
-    ion_user_handle_t handle;
-    ion_user_handle_t handle1;
-    ion_user_handle_t handle2;
+    int     __unknown2; // 3c
+
+    int     frameworkFormat; // 40
+    int     width; // 44
+    int     height; // 48
+    int     stride; // 4c
+    int     vstride; // 50
+    int     is_compressible; // 54
 
     // FIXME: the attributes below should be out-of-line
-    uint64_t base __attribute__((aligned(8)));
-    uint64_t base1 __attribute__((aligned(8)));
-    uint64_t base2 __attribute__((aligned(8)));
-
+    int __unknown3; // 58
+    int __unknown4; // 5c
+    int __unknown5; // 60
+    /* not sure about these three */
+    int internal_format; // 64
+    int compressed_out; // 68
+    int prefer_compression; // 6c
+    
 #ifdef __cplusplus
     static inline int sNumInts() {
         return (((sizeof(private_handle_t) - sizeof(native_handle_t))/sizeof(int)) - sNumFds);
@@ -191,21 +199,19 @@ struct private_handle_t {
         return NULL;
     }
 
-    int     lock_usage;
-    int     lock_offset;
-    int     lock_len;
+    /* not sure about these four */
+    int     lock_usage; // 70
+    int     lock_offset; // 74
+    int     lock_len; // 78
+    int     dssRatio; // 7c
 
-    int     dssRatio;
-    int     cropLeft;
-    int     cropTop;
-    int     cropRight;
-    int     cropBottom;
-
-    int          prefer_compression;
-    uint64_t     internal_format;
-    int          is_compressible;
-    int          compressed_out;
-
+    ion_user_handle_t handle; // 80
+    ion_user_handle_t handle1; // 84
+    ion_user_handle_t handle2; // 88
+/* 8c padding */
+    uint64_t base __attribute__((aligned(8))); // 90
+    uint64_t base1 __attribute__((aligned(8))); // 98
+    uint64_t base2 __attribute__((aligned(8))); // a0
 #endif
 };
 
