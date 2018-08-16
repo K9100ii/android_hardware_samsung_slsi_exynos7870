@@ -254,7 +254,7 @@ static int gralloc_alloc_rgb(int ionfd, int w, int h, int format, int usage,
         crc_size = num_tiles_x * num_tiles_y * sizeof(long long unsigned int);
         err = ion_alloc_fd(ionfd, crc_size + sizeof(struct gralloc_crc_header), alignment, heap_mask, ion_flags,
                            &fd1);
-        *hnd = new private_handle_t(fd, fd1, size, usage, w, h, format, internal_format, frameworkFormat, *stride,
+        *hnd = new private_handle_t(fd, fd1, size, crc_size + sizeof(struct gralloc_crc_header), usage, w, h, format, internal_format, frameworkFormat, *stride,
                                 vstride, is_compressible);
     }
     else
@@ -452,17 +452,20 @@ static int gralloc_alloc_yuv(int ionfd, int w, int h, int format,
         if (err)
             goto err1;
         if (planes == 3) {
-            if (format == HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_PRIV)
+            size_t plane3_size = chroma_size;
+            if (format == HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_PRIV) {
                 err = ion_alloc_fd(ionfd, PRIV_SIZE, 0, ION_HEAP_SYSTEM_MASK, 0, &fd2);
-            else
+                plane3_size = PRIV_SIZE;
+            } else
                 err = ion_alloc_fd(ionfd, chroma_size, 0, heap_mask, ion_flags, &fd2);
             if (err)
                 goto err2;
 
-            *hnd = new private_handle_t(fd, fd1, fd2, luma_size, usage, w, h,
-                                        format, internal_format, frameworkFormat, *stride, luma_vstride, is_compressible);
+            *hnd = new private_handle_t(fd, fd1, fd2, luma_size, chroma_size, plane3_size, usage, w, h,
+                                        format, internal_format, frameworkFormat, *stride, luma_vstride, 
+                                        is_compressible);
         } else {
-            *hnd = new private_handle_t(fd, fd1, luma_size, usage, w, h, format, internal_format, frameworkFormat,
+            *hnd = new private_handle_t(fd, fd1, luma_size, chroma_size, usage, w, h, format, internal_format, frameworkFormat,
                                         *stride, luma_vstride, is_compressible);
         }
     }

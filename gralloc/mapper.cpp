@@ -89,55 +89,10 @@ bool gralloc_crc_allocation_check(int format, int width, int height, int flags)
 
 static int gralloc_map(gralloc_module_t const* module, buffer_handle_t handle)
 {
-    size_t chroma_vstride = 0;
-    size_t chroma_size = 0;
-    size_t ext_size = 256;
-    void *privAddress;
-
     private_handle_t *hnd = (private_handle_t*)handle;
 
     if (hnd->flags & GRALLOC_USAGE_PROTECTED || hnd->flags & GRALLOC_USAGE_NOZEROED) {
         hnd->base = hnd->base1 = hnd->base2 = 0;
-    }
-
-    switch (hnd->format) {
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_TILED:
-        chroma_vstride = ALIGN(hnd->height / 2, 32);
-        chroma_size = chroma_vstride * hnd->stride + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YCrCb_420_SP_M:
-    case HAL_PIXEL_FORMAT_EXYNOS_YCrCb_420_SP_M_FULL:
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M:
-        chroma_size = hnd->stride * ALIGN(hnd->vstride / 2, 8) + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YV12_M:
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_P_M:
-        chroma_size = (hnd->vstride / 2) * ALIGN(hnd->stride / 2, 16) + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_S10B:
-        chroma_size = (hnd->stride * ALIGN(hnd->vstride / 2, 8) + 64) + ((ALIGN(hnd->width / 4, 16) * (hnd->height / 2)) + 64) + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_PRIV:
-        chroma_size = hnd->stride * ALIGN(hnd->vstride / 2, 8) + ext_size;
-        privAddress = mmap(0, PRIV_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, hnd->fd2, 0);
-        if (privAddress == MAP_FAILED) {
-            ALOGE("%s: could not mmap %s", __func__, strerror(errno));
-        } else {
-            hnd->base2 = (uint64_t)privAddress;
-            ion_sync_fd(getIonFd(module), hnd->fd2);
-        }
-        break;
-    default:
-#ifdef USES_EXYNOS_CRC_BUFFER_ALLOC
-        if (gralloc_crc_allocation_check(hnd->format, hnd->width, hnd->height, hnd->flags)) {
-            int num_tiles_x, num_tiles_y;
-            num_tiles_x = gralloc_get_tile_num(hnd->width);
-            num_tiles_y = gralloc_get_tile_num(hnd->height);
-            chroma_size = num_tiles_x * num_tiles_y * sizeof(long long unsigned int)
-                + sizeof(struct gralloc_crc_header);
-        }
-#endif /* USES_EXYNOS_CRC_BUFFER_ALLOC */
-        break;
     }
 
     if ((hnd->flags & GRALLOC_USAGE_PROTECTED) &&
@@ -158,14 +113,14 @@ static int gralloc_map(gralloc_module_t const* module, buffer_handle_t handle)
         ion_sync_fd(getIonFd(module), hnd->fd);
 
         if (hnd->fd1 >= 0) {
-            void *mappedAddress1 = (void*)mmap(0, chroma_size, PROT_READ|PROT_WRITE,
+            void *mappedAddress1 = (void*)mmap(0, hnd->size1, PROT_READ|PROT_WRITE,
                                                 MAP_SHARED, hnd->fd1, 0);
             hnd->base1 = (uint64_t)mappedAddress1;
             ion_sync_fd(getIonFd(module), hnd->fd1);
         }
         if (hnd->fd2 >= 0) {
             if (hnd->format != HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_PRIV) {
-                void *mappedAddress2 = (void*)mmap(0, chroma_size, PROT_READ|PROT_WRITE, MAP_SHARED, hnd->fd2, 0);
+                void *mappedAddress2 = (void*)mmap(0, hnd->size2, PROT_READ|PROT_WRITE, MAP_SHARED, hnd->fd2, 0);
                 hnd->base2 = (uint64_t)mappedAddress2;
                 ion_sync_fd(getIonFd(module), hnd->fd2);
             }
@@ -178,47 +133,6 @@ static int gralloc_map(gralloc_module_t const* module, buffer_handle_t handle)
 static int gralloc_unmap(gralloc_module_t const* module __unused, buffer_handle_t handle)
 {
     private_handle_t* hnd = (private_handle_t*)handle;
-    size_t chroma_vstride = 0;
-    size_t chroma_size = 0;
-    size_t ext_size = 256;
-
-    switch (hnd->format) {
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_TILED:
-        chroma_vstride = ALIGN(hnd->height / 2, 32);
-        chroma_size = chroma_vstride * hnd->stride + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YCrCb_420_SP_M:
-    case HAL_PIXEL_FORMAT_EXYNOS_YCrCb_420_SP_M_FULL:
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M:
-        chroma_size = hnd->stride * ALIGN(hnd->vstride / 2, 8) + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YV12_M:
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_P_M:
-        chroma_size = (hnd->vstride / 2) * ALIGN(hnd->stride / 2, 16) + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_S10B:
-        chroma_size = (hnd->stride * ALIGN(hnd->vstride / 2, 8) + 64) + ((ALIGN(hnd->width / 4, 16) * (hnd->height / 2)) + 64) + ext_size;
-        break;
-    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_PRIV:
-        chroma_size = hnd->stride * ALIGN(hnd->vstride / 2, 8) + ext_size;
-        if (munmap(INT_TO_PTR(hnd->base2), PRIV_SIZE) < 0) {
-            ALOGE("%s: could not unmap %s %llx %zu", __func__, strerror(errno), (long long)hnd->base2, chroma_size);
-        }
-        hnd->base2 = 0;
-        break;
-    default:
-#ifdef USES_EXYNOS_CRC_BUFFER_ALLOC
-        if (gralloc_crc_allocation_check(hnd->format, hnd->width, hnd->height, hnd->flags)) {
-            int num_tiles_x, num_tiles_y;
-            num_tiles_x = gralloc_get_tile_num(hnd->width);
-            num_tiles_y = gralloc_get_tile_num(hnd->height);
-            chroma_size = num_tiles_x * num_tiles_y * sizeof(long long unsigned int)
-                + sizeof(struct gralloc_crc_header);
-        }
-#endif /* USES_EXYNOS_CRC_BUFFER_ALLOC */
-        break;
-    }
-
     if (!hnd->base)
         return 0;
 
@@ -232,18 +146,18 @@ static int gralloc_unmap(gralloc_module_t const* module __unused, buffer_handle_
     if (hnd->fd1 >= 0) {
         if (!hnd->base1)
             return 0;
-        if (munmap(INT_TO_PTR(hnd->base1), chroma_size) < 0) {
-            ALOGE("%s: could not unmap %s %llx %zu", __func__, strerror(errno),
-                  (long long)hnd->base1, chroma_size);
+        if (munmap(INT_TO_PTR(hnd->base1), hnd->size1) < 0) {
+            ALOGE("%s: could not unmap %s %llx %d", __func__, strerror(errno),
+                  (long long)hnd->base1, hnd->size1);
         }
         hnd->base1 = 0;
     }
     if (hnd->fd2 >= 0) {
         if (!hnd->base2)
             return 0;
-        if (munmap(INT_TO_PTR(hnd->base2), chroma_size) < 0) {
-            ALOGE("%s: could not unmap %s %llx %zu", __func__, strerror(errno),
-                  (long long)hnd->base2, chroma_size);
+        if (munmap(INT_TO_PTR(hnd->base2), hnd->size2) < 0) {
+            ALOGE("%s: could not unmap %s %llx %d", __func__, strerror(errno),
+                  (long long)hnd->base2, hnd->size2);
         }
         hnd->base2 = 0;
     }

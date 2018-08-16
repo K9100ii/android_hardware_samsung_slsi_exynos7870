@@ -85,18 +85,18 @@ struct private_handle_t {
     int     fd1;
     int     fd2;
     // ints
-    int     magic;
-    int     flags;
+    int     magic; // 18
+    int     flags; // 1c
     int     size; // 20
     int     size1; // 24
     int     size2; // 28
 
     int     offset; // 2c
     int     format; // 30
-    int     format1; // 34
-    int     format2; // 38
+    int     __unknown2; // 34
+    int     internal_format; // 38
 
-    int     __unknown2; // 3c
+    int     format_top_bit; // 3c
 
     int     frameworkFormat; // 40
     int     width; // 44
@@ -110,7 +110,7 @@ struct private_handle_t {
     int __unknown4; // 5c
     int __unknown5; // 60
     /* not sure about these three */
-    int internal_format; // 64
+    int __unknown6; // 64
     int compressed_out; // 68
     int prefer_compression; // 6c
     
@@ -122,7 +122,7 @@ struct private_handle_t {
     static const int sMagic = 0x3141592;
 
     private_handle_t(int fd, int size, int flags) :
-        fd(fd), fd1(-1), fd2(-1), magic(sMagic), flags(flags), size(size),
+        fd(fd), fd1(-1), fd2(-1), magic(sMagic), flags(flags), size(size), size1(0), size2(0),
         offset(0), format(0), width(0), height(0), stride(0), vstride(0), frameworkFormat(0),
         handle(0), handle1(0), handle2(0), base(0), base1(0), base2(0), 
         dssRatio(0), prefer_compression(PREFER_COMPRESSION_NO_CHANGE),
@@ -136,7 +136,7 @@ struct private_handle_t {
 
     private_handle_t(int fd, int size, int flags, int w,
                     int h, int format, uint64_t internal_format, int frameworkFormat, int stride, int vstride, int is_compressible) :
-        fd(fd), fd1(-1), fd2(-1), magic(sMagic), flags(flags), size(size),
+        fd(fd), fd1(-1), fd2(-1), magic(sMagic), flags(flags), size(size), size1(0), size2(0),
         offset(0), format(format), width(w), height(h), stride(stride), vstride(vstride), frameworkFormat(frameworkFormat),
         handle(0), handle1(0), handle2(0), base(0), base1(0), base2(0), 
         dssRatio(0), prefer_compression(PREFER_COMPRESSION_NO_CHANGE),
@@ -148,9 +148,9 @@ struct private_handle_t {
         numFds = sNumFds - 2;
     }
 
-    private_handle_t(int fd, int fd1, int size, int flags, int w,
+    private_handle_t(int fd, int fd1, int size, int size1, int flags, int w,
                     int h, int format, uint64_t internal_format, int frameworkFormat, int stride, int vstride, int is_compressible) :
-        fd(fd), fd1(fd1), fd2(-1), magic(sMagic), flags(flags), size(size),
+        fd(fd), fd1(fd1), fd2(-1), magic(sMagic), flags(flags), size(size), size1(size1), size2(0),
         offset(0), format(format), width(w), height(h), stride(stride), vstride(vstride), frameworkFormat(frameworkFormat),
         handle(0), handle1(0), handle2(0), base(0), base1(0), base2(0), 
         dssRatio(0), prefer_compression(PREFER_COMPRESSION_NO_CHANGE),
@@ -162,9 +162,9 @@ struct private_handle_t {
         numFds = sNumFds - 1;
     }
 
-    private_handle_t(int fd, int fd1, int fd2, int size, int flags, int w,
+    private_handle_t(int fd, int fd1, int fd2, int size, int size1, int size2, int flags, int w,
                     int h, int format, uint64_t internal_format, int frameworkFormat, int stride, int vstride, int is_compressible) :
-        fd(fd), fd1(fd1), fd2(fd2), magic(sMagic), flags(flags), size(size),
+        fd(fd), fd1(fd1), fd2(fd2), magic(sMagic), flags(flags), size(size), size1(size1), size2(size2),
         offset(0), format(format), width(w), height(h), stride(stride), vstride(vstride), frameworkFormat(frameworkFormat),
         handle(0), handle1(0), handle2(0), base(0), base1(0), base2(0), 
         dssRatio(0), prefer_compression(PREFER_COMPRESSION_NO_CHANGE),
