@@ -402,6 +402,34 @@ int gralloc_lock_ycbcr(gralloc_module_t const* module __unused,
         ycbcr->cr = (void *)hnd->base1;
         ycbcr->cb = (void *)(((unsigned long)hnd->base1) + 1);
         break;
+    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_P:
+        yStride = hnd->height;
+        cStride = ALIGN(yStride / 2, 16);
+        cStep = 1;
+        ycbcr->y = (void *)hnd->base;
+        ycbcr->cb = (void *)(((unsigned long)hnd->base) + hnd->height * yStride);
+        ycbcr->cb = (void *)(((unsigned long)hnd->base) + yStride * hnd->height +
+                    cStride * hnd->height/2);
+        break;
+    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_PRIV:
+    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M_S10B:
+    case HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M:
+    {
+        yStride = hnd->stride;
+        cStep = 2;
+        cStride = yStride;
+        bool only_two_planes = (usage & GRALLOC_USAGE_HW_VIDEO_ENCODER) == 0;
+        ycbcr->y = (void *)hnd->base;
+        ycbcr->cb = (void *)hnd->base1;
+        ycbcr->cr = (void *)(((unsigned long)hnd->base1) + 1);
+        if (!only_two_planes)
+            only_two_planes = hnd->format == HAL_PIXEL_FORMAT_EXYNOS_YCbCr_420_SP_M;
+        // TODO: this may be incorrect for YCbCr_420_SP_M_S10B,
+        // but it matches the blob...
+        if (!only_two_planes)
+            ycbcr->cr = (void *)hnd->base2;
+        break;
+    }
     default:
         ALOGE("gralloc_lock_ycbcr unexpected internal format %x",
                 hnd->format);
