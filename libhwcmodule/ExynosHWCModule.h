@@ -40,7 +40,11 @@
 
 #define DUAL_VIDEO_OVERLAY_SUPPORT
 
-/* Max number windows available in Exynos7570 is 3. */
+/*
+ * The maximum number of windows available in Exynos7870 is 3.
+ * See the max_win property in the decon_0 node in the exynos7870 dtsi
+ * at arch/arm64/boot/dts/exynos7870.dtsi in the kernel.
+ */
 #define NUM_AVAILABLE_HW_WINDOWS	3
 
 #ifdef FIMD_BW_OVERLAP_CHECK
