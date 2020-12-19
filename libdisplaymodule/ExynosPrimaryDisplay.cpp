@@ -195,7 +195,7 @@ void ExynosPrimaryDisplay::handleStaticLayers(hwc_display_contents_1_t *contents
     ExynosDisplay::handleStaticLayers(contents, win_data, tot_ovly_wins);
 
     if (mLastFbWindow >= NUM_HW_WINDOWS) {
-        DISPLAY_LOGE("handleStaticLayers:: invalid mLastFbWindow(%d)", mLastFbWindow);
+        DISPLAY_LOGE("handleStaticLayers:: invalid mLastFbWindow(%zu)", mLastFbWindow);
         return;
     }
 
@@ -334,11 +334,11 @@ int ExynosPrimaryDisplay::handleWindowUpdate(hwc_display_contents_1_t __unused *
                 }
 
                 if ((currentRect.left > currentRect.right) || (currentRect.top > currentRect.bottom)) {
-                    HLOGD("[WIN_UPDATE] window(%d) layer(%d) invalid region (%4d, %4d) - (%4d, %4d)",
+                    HLOGD("[WIN_UPDATE] window(%zu) layer(%d) invalid region (%4d, %4d) - (%4d, %4d)",
                         i, layerIdx, currentRect.left, currentRect.top, currentRect.right, currentRect.bottom);
                     return -eWindowUpdateInvalidRegion;
                 }
-                HLOGD("[WIN_UPDATE] Updated Window(%d) Layer(%d)  (%4d, %4d) - (%4d, %4d)",
+                HLOGD("[WIN_UPDATE] Updated Window(%d) Layer(%zu)  (%4d, %4d) - (%4d, %4d)",
                     windowIndex, i, currentRect.left, currentRect.top, currentRect.right, currentRect.bottom);
                 updateRect = expand(updateRect, currentRect);
             }
@@ -392,7 +392,7 @@ int ExynosPrimaryDisplay::handleWindowUpdate(hwc_display_contents_1_t __unused *
                 HLOGV("[WIN_UPDATE] win[%d] left(%d) right(%d) intersection(%d)", windowIndex, currentRect.left, currentRect.right, intersectionWidth);
 
                 if (intersectionWidth != 0 && (size_t)((intersectionWidth * bitsPerPixel) / 8) < BURSTLEN_BYTES) {
-                    HLOGV("[WIN_UPDATE] win[%d] insufficient burst length ((%d)*(%d)/8) < %d", windowIndex, intersectionWidth, bitsPerPixel, BURSTLEN_BYTES);
+                    HLOGV("[WIN_UPDATE] win[%d] insufficient burst length ((%d)*(%d)/8) < %zu", windowIndex, intersectionWidth, bitsPerPixel, BURSTLEN_BYTES);
                     burstLengthCheckDone = false;
                     break;
                 }
