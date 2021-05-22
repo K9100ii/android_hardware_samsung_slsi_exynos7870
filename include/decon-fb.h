@@ -22,11 +22,7 @@
 #define DECON_WIN_UPDATE_IDX MAX_DECON_WIN
 #define MAX_BUF_PLANE_CNT (3)
 typedef unsigned int u32;
-//#if defined(USES_ARCH_ARM64) || defined(USES_DECON_64BIT_ADDRESS)
 typedef uint64_t dma_addr_t;
-//#else
-//typedef uint32_t dma_addr_t;
-//#endif
 struct decon_win_rect {
   int x;
   int y;
@@ -169,12 +165,16 @@ struct decon_win_config {
       enum decon_idma_type idma_type;
       enum decon_pixel_format format;
       struct vpp_params vpp_parm;
+      /* no read area of IDMA */
       struct decon_win_rect block_area;
       struct decon_win_rect transparent_area;
       struct decon_win_rect opaque_area;
+      /* source framebuffer coordinates */
       struct decon_frame src;
     };
   };
+
+  /* destination OSD coordinates */
   struct decon_frame dst;
   bool protection;
 };
@@ -183,6 +183,12 @@ struct decon_win_config_data {
   int fd_odma;
   struct decon_win_config config[MAX_DECON_WIN + 1];
 };
+enum decon_pwr_mode {
+  DECON_POWER_MODE_OFF,
+  DECON_POWER_MODE_DOZE,
+  DECON_POWER_MODE_NORMAL,
+  DECON_POWER_MODE_DOZE_SUSPEND
+};
 #define S3CFB_WIN_POSITION _IOW('F', 203, struct decon_user_window)
 #define S3CFB_WIN_SET_PLANE_ALPHA _IOW('F', 204, struct s3c_fb_user_plane_alpha)
 #define S3CFB_WIN_SET_CHROMA _IOW('F', 205, struct s3c_fb_user_chroma)
@@ -190,7 +196,10 @@ struct decon_win_config_data {
 #define S3CFB_GET_ION_USER_HANDLE _IOWR('F', 208, struct s3c_fb_user_ion_client)
 #define S3CFB_WIN_CONFIG _IOW('F', 209, struct decon_win_config_data)
 #define S3CFB_WIN_PSR_EXIT _IOW('F', 210, int)
+#define S3CFB_POWER_MODE _IOW('F', 223, __u32)
 #define EXYNOS_GET_HDMI_CONFIG _IOW('F', 220, struct exynos_hdmi_data)
 #define EXYNOS_SET_HDMI_CONFIG _IOW('F', 221, struct exynos_hdmi_data)
+#define DECON_IOC_LPD_EXIT_LOCK _IOW('L', 0, u32)
+#define DECON_IOC_LPD_UNLOCK _IOW('L', 1, u32)
 
 #endif
