@@ -26,8 +26,9 @@
 #define GENERAL_UI (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_COMPOSER)
 
 /* It's for compression check format, width, usage*/
-int check_for_compression(int w, int h, int format, int usage)
+int check_for_compression(int w __unused, int h __unused, int format __unused, int usage __unused)
 {
+#if 0
 	char value[256];
 	int afbc_prop;
 
@@ -61,7 +62,9 @@ int check_for_compression(int w, int h, int format, int usage)
 		default:
 			return 0;
 	}
-
+#else
+	return 0;
+#endif
 }
 
 uint64_t gralloc_select_format(int req_format, int usage, int is_compressible)
