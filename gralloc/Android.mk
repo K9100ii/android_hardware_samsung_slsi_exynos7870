@@ -41,6 +41,7 @@ LOCAL_SRC_FILES := 	\
 	mapper.cpp
 
 LOCAL_MODULE := gralloc.$(TARGET_BOARD_PLATFORM)
+LOCAL_VENDOR_MODULE := true
 LOCAL_CFLAGS += -DLOG_TAG=\"gralloc\" -Wno-missing-field-initializers -DMALI_AFBC_GRALLOC=$(MALI_AFBC_GRALLOC)
 
 ifeq ($(BOARD_USES_EXYNOS5_GRALLOC_RANGE_FLUSH), true)
