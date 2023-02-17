@@ -37,7 +37,8 @@ inline size_t roundUpToPageSize(size_t x) {
 }
 #endif
 
+int getIonFd(gralloc_module_t const *module);
 int grallocMap(gralloc_module_t const* module, private_handle_t *hnd);
-int grallocUnmap(gralloc_module_t const* module, private_handle_t *hnd);
+int grallocUnmap(private_handle_t *hnd);
 
 #endif /* GR_H_ */

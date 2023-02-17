@@ -24,33 +24,23 @@
 #include <pthread.h>
 #include <errno.h>
 #include <unistd.h>
-
 #include <cutils/native_handle.h>
-
 #include <linux/fb.h>
 #include <linux/ion.h>
 
-typedef enum
-{
-#ifndef GRALLOC_USAGE_PROTECTED_DPB
-    GRALLOC_USAGE_PROTECTED_DPB         = 0x00800000U,
-#endif
-#ifndef GRALLOC_USAGE_PHYSICALLY_LINEAR
-    GRALLOC_USAGE_PHYSICALLY_LINEAR     = 0x01000000U,
-#endif
-#ifndef GRALLOC_USAGE_PRIVATE_NONSECURE
-    GRALLOC_USAGE_PRIVATE_NONSECURE     = 0x02000000U,
-#endif
-#ifndef GRALLOC_USAGE_CAMERA_RESERVED
-    GRALLOC_USAGE_CAMERA_RESERVED       = 0x04000000U,
-#endif
-#ifndef GRALLOC_USAGE_NOZEROED
-    GRALLOC_USAGE_NOZEROED              = 0x08000000U,
-#endif
-#ifndef GRALLOC_USAGE_VIDEO_EXT
-    GRALLOC_USAGE_VIDEO_EXT             = 0x10000000U,
-#endif
-} mali_gralloc_usage_type;
+/* SLSI specific usages */
+#define GRALLOC_USAGE_PROTECTED_DPB                 0x00800000U
+#define GRALLOC_USAGE_PHYSICALLY_LINEAR             0x01000000U
+#define GRALLOC_USAGE_PRIVATE_NONSECURE             0x02000000U
+#define GRALLOC_USAGE_CAMERA_RESERVED               0x04000000U
+#define GRALLOC_USAGE_NOZEROED                      0x08000000U
+#define GRALLOC_USAGE_VIDEO_EXT                     GRALLOC_USAGE_PRIVATE_0
+#define GRALLOC_USAGE_YUV_RANGE_FULL                GRALLOC_USAGE_PRIVATE_1
+#define GRALLOC_USAGE_DAYDREAM_SINGLE_BUFFER_MODE   GRALLOC_USAGE_PRIVATE_2
+#define GRALLOC_USAGE_SECURE_CAMERA_RESERVED        GRALLOC_USAGE_PRIVATE_3
+
+#define AFBC_INFO_SIZE                              (sizeof(int))
+#define AFBC_ENABLE                                 (0xafbc)
 
 enum {
 	PREFER_COMPRESSION_NO_CHANGE = 0x00,
@@ -135,7 +125,7 @@ struct private_handle_t {
     int __unknown6; // 64
     int compressed_out; // 68
     int prefer_compression; // 6c
-    
+
 #ifdef __cplusplus
     static inline int sNumInts() {
         return (((sizeof(private_handle_t) - sizeof(native_handle_t))/sizeof(int)) - sNumFds);
@@ -212,7 +202,7 @@ struct private_handle_t {
     static private_handle_t* dynamicCast(const native_handle* in)
     {
         if (validate(in) == 0)
-            return (private_handle_t*) in;
+            return const_cast<private_handle_t*>(static_cast<const private_handle_t*>(in));
 
         return NULL;
     }
@@ -232,25 +222,4 @@ struct private_handle_t {
     uint64_t base2 __attribute__((aligned(8))); // a0
 #endif
 };
-
-#define DSS_CROP_X 0
-#define DSS_CROP_Y 360
-#define DSS_CROP_W 1920
-#define DSS_CROP_H 1080
-
-enum {
-    PRIVATE_DATA_DSS_STATUS = 0x00000001,
-    PRIVATE_DATA_DSS_CROP = 0x00000002
-};
-
-#define CRC_LIMIT_WIDTH     (720)
-#define CRC_LIMIT_HEIGHT    (1280)
-#define CRC_TILE_SIZE       (16)
-#define CRC_BUFFER_KEY      (0x12131415)
-struct gralloc_crc_header {
-    int crcBufferKey;
-    int crcPartial;
-    int reserved[2];
-};
-
 #endif /* GRALLOC_PRIV_H_ */
